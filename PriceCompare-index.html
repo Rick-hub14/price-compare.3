@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PriceCompare — Trova il miglior prezzo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <style>
+    body { font-family: Inter, sans-serif; }
+    .glass { background: rgba(255,255,255,.82); backdrop-filter: blur(10px); }
+    .line-clamp-2 { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900">
+  <header class="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur">
+    <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+      <a href="#" class="flex items-center gap-2 font-extrabold text-xl tracking-tight">
+        <span class="grid h-9 w-9 place-items-center rounded-xl bg-indigo-600 text-white">
+          <i class="fa-solid fa-tags"></i>
+        </span>
+        PriceCompare
+      </a>
+      <nav class="hidden gap-6 text-sm font-medium text-slate-600 md:flex">
+        <a href="#search" class="hover:text-indigo-600">Cerca</a>
+        <a href="#results" class="hover:text-indigo-600">Risultati</a>
+        <a href="#how" class="hover:text-indigo-600">Come funziona</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section id="search" class="relative overflow-hidden">
+      <div class="mx-auto max-w-7xl px-4 pb-14 pt-16 sm:px-6 lg:px-8 lg:pb-20 lg:pt-24">
+        <div class="mx-auto max-w-3xl text-center">
+          <div class="mb-5 inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
+            <i class="fa-solid fa-bolt"></i> Confronto prezzi reale
+          </div>
+          <h1 class="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
+            Trova il <span class="text-indigo-600">miglior prezzo</span> per qualsiasi prodotto
+          </h1>
+          <p class="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
+            Cerca un prodotto e confronta le offerte disponibili, con immagine, prezzo, negozio e link diretto alla pagina del prodotto.
+          </p>
+
+          <form id="searchForm" class="mx-auto mt-8 flex max-w-2xl flex-col gap-3 sm:flex-row">
+            <div class="relative flex-1">
+              <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input id="searchInput" required autocomplete="off"
+                class="w-full rounded-2xl border border-slate-200 bg-white px-11 py-4 text-sm shadow-sm outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+                placeholder="Es. Nike Air Max 270, iPhone 16, LEGO Technic...">
+            </div>
+            <button id="searchButton" type="submit"
+              class="rounded-2xl bg-indigo-600 px-7 py-4 text-sm font-bold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60">
+              <i class="fa-solid fa-search mr-2"></i>Cerca
+            </button>
+          </form>
+          <p id="status" class="mt-4 min-h-5 text-sm text-slate-500"></p>
+        </div>
+      </div>
+    </section>
+
+    <section id="results" class="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
+      <div id="resultsHeader" class="mb-5 hidden items-end justify-between gap-4">
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-wide text-indigo-600">Risultati</p>
+          <h2 id="resultsTitle" class="mt-1 text-2xl font-extrabold">Offerte trovate</h2>
+        </div>
+        <span id="resultCount" class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600"></span>
+      </div>
+
+      <div id="initialState" class="rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center">
+        <div class="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-indigo-50 text-2xl text-indigo-600">
+          <i class="fa-solid fa-cart-shopping"></i>
+        </div>
+        <h2 class="mt-5 text-xl font-bold">Cerca un prodotto per iniziare</h2>
+        <p class="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-500">
+          I risultati verranno caricati dal motore di confronto tramite il tuo Cloudflare Worker.
+        </p>
+      </div>
+
+      <div id="loading" class="hidden grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="animate-pulse rounded-3xl border border-slate-200 bg-white p-5"><div class="h-48 rounded-2xl bg-slate-100"></div><div class="mt-5 h-4 w-3/4 rounded bg-slate-100"></div><div class="mt-3 h-4 w-1/2 rounded bg-slate-100"></div><div class="mt-6 h-10 rounded-xl bg-slate-100"></div></div>
+        <div class="animate-pulse rounded-3xl border border-slate-200 bg-white p-5"><div class="h-48 rounded-2xl bg-slate-100"></div><div class="mt-5 h-4 w-3/4 rounded bg-slate-100"></div><div class="mt-3 h-4 w-1/2 rounded bg-slate-100"></div><div class="mt-6 h-10 rounded-xl bg-slate-100"></div></div>
+        <div class="animate-pulse rounded-3xl border border-slate-200 bg-white p-5"><div class="h-48 rounded-2xl bg-slate-100"></div><div class="mt-5 h-4 w-3/4 rounded bg-slate-100"></div><div class="mt-3 h-4 w-1/2 rounded bg-slate-100"></div><div class="mt-6 h-10 rounded-xl bg-slate-100"></div></div>
+      </div>
+
+      <div id="errorState" class="hidden rounded-3xl border border-red-200 bg-red-50 p-8 text-center">
+        <div class="mx-auto grid h-12 w-12 place-items-center rounded-full bg-red-100 text-red-600"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <h2 class="mt-4 text-lg font-bold text-red-900">Non è stato possibile completare la ricerca</h2>
+        <p id="errorMessage" class="mx-auto mt-2 max-w-2xl text-sm leading-6 text-red-700"></p>
+      </div>
+
+      <div id="resultsGrid" class="hidden grid gap-5 sm:grid-cols-2 lg:grid-cols-3"></div>
+    </section>
+
+    <section id="how" class="border-y border-slate-200 bg-white">
+      <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+        <div class="grid gap-6 md:grid-cols-3">
+          <div class="rounded-2xl bg-slate-50 p-6"><div class="text-xl text-indigo-600"><i class="fa-solid fa-magnifying-glass"></i></div><h3 class="mt-4 font-bold">1. Cerca</h3><p class="mt-2 text-sm leading-6 text-slate-600">Inserisci il nome del prodotto che vuoi confrontare.</p></div>
+          <div class="rounded-2xl bg-slate-50 p-6"><div class="text-xl text-indigo-600"><i class="fa-solid fa-scale-balanced"></i></div><h3 class="mt-4 font-bold">2. Confronta</h3><p class="mt-2 text-sm leading-6 text-slate-600">Il Worker interroga il servizio di confronto e normalizza le offerte.</p></div>
+          <div class="rounded-2xl bg-slate-50 p-6"><div class="text-xl text-indigo-600"><i class="fa-solid fa-arrow-up-right-from-square"></i></div><h3 class="mt-4 font-bold">3. Acquista</h3><p class="mt-2 text-sm leading-6 text-slate-600">Apri direttamente la pagina del negozio per vedere l'offerta.</p></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-slate-950 text-slate-400">
+    <div class="mx-auto max-w-7xl px-4 py-8 text-center text-xs sm:px-6 lg:px-8">
+      PriceCompare · Confronto prezzi
+    </div>
+  </footer>
+
+<script>
+  // INCOLLA QUI L'URL PUBBLICA DEL TUO CLOUDFLARE WORKER.
+  // Esempio: https://pricecompare-api.nomeaccount.workers.dev
+  const API_BASE_URL = "https://TUO-WORKER.workers.dev";
+
+  const form = document.getElementById("searchForm");
+  const input = document.getElementById("searchInput");
+  const button = document.getElementById("searchButton");
+  const status = document.getElementById("status");
+  const initialState = document.getElementById("initialState");
+  const loading = document.getElementById("loading");
+  const errorState = document.getElementById("errorState");
+  const errorMessage = document.getElementById("errorMessage");
+  const resultsHeader = document.getElementById("resultsHeader");
+  const resultsTitle = document.getElementById("resultsTitle");
+  const resultCount = document.getElementById("resultCount");
+  const resultsGrid = document.getElementById("resultsGrid");
+
+  const money = (value, currency = "EUR") => {
+    if (value === null || value === undefined || value === "" || Number.isNaN(Number(value))) return "Prezzo non disponibile";
+    try { return new Intl.NumberFormat("it-IT", { style:"currency", currency }).format(Number(value)); }
+    catch { return `${value} ${currency}`; }
+  };
+
+  const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;"
+  }[c]));
+
+  function offerCard(offer, index) {
+    const image = offer.image || offer.thumbnail || "";
+    const title = offer.title || offer.name || "Prodotto";
+    const store = offer.store || offer.merchant || "Negozio";
+    const price = money(offer.price, offer.currency || "EUR");
+    const shipping = offer.shipping ? escapeHtml(offer.shipping) : "";
+    const url = offer.url || "#";
+    const badge = index === 0 ? `<span class="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">Miglior prezzo</span>` : "";
+
+    return `
+      <article class="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+        <div class="relative flex h-56 items-center justify-center bg-slate-50 p-5">
+          ${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(title)}" loading="lazy" class="max-h-full max-w-full object-contain transition duration-300 group-hover:scale-105" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid'">` : ""}
+          <div class="${image ? "hidden" : "grid"} h-20 w-20 place-items-center rounded-2xl bg-slate-100 text-3xl text-slate-400">
+            <i class="fa-regular fa-image"></i>
+          </div>
+          <div class="absolute left-4 top-4">${badge}</div>
+        </div>
+        <div class="p-5">
+          <div class="text-xs font-bold uppercase tracking-wide text-indigo-600">${escapeHtml(store)}</div>
+          <h3 class="mt-2 min-h-12 line-clamp-2 text-sm font-bold leading-6 text-slate-900">${escapeHtml(title)}</h3>
+          <div class="mt-4 flex items-end justify-between gap-3">
+            <div>
+              <div class="text-2xl font-extrabold tracking-tight text-slate-900">${price}</div>
+              ${shipping ? `<div class="mt-1 text-xs text-slate-500">${shipping}</div>` : ""}
+            </div>
+            <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer"
+               class="shrink-0 rounded-xl bg-indigo-600 px-4 py-3 text-xs font-bold text-white transition hover:bg-indigo-700">
+              Vai al negozio <i class="fa-solid fa-arrow-up-right-from-square ml-1"></i>
+            </a>
+          </div>
+        </div>
+      </article>`;
+  }
+
+  function setLoading(on) {
+    button.disabled = on;
+    button.innerHTML = on ? `<i class="fa-solid fa-spinner fa-spin mr-2"></i>Cerco...` : `<i class="fa-solid fa-search mr-2"></i>Cerca`;
+    loading.classList.toggle("hidden", !on);
+    initialState.classList.add("hidden");
+    errorState.classList.add("hidden");
+    resultsGrid.classList.add("hidden");
+    resultsHeader.classList.add("hidden");
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const query = input.value.trim();
+    if (!query) return;
+
+    if (!API_BASE_URL || API_BASE_URL.includes("TUO-WORKER")) {
+      errorState.classList.remove("hidden");
+      errorMessage.textContent = "Configura prima API_BASE_URL in index.html con l'URL pubblico del tuo Cloudflare Worker.";
+      return;
+    }
+
+    setLoading(true);
+    status.textContent = "Sto cercando le offerte disponibili...";
+    try {
+      const url = `${API_BASE_URL.replace(/\/$/, "")}/api/search?q=${encodeURIComponent(query)}`;
+      const response = await fetch(url, { headers: { "Accept": "application/json" } });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || `Errore HTTP ${response.status}`);
+
+      const offers = Array.isArray(data.offers) ? data.offers : [];
+      resultsTitle.textContent = `Offerte per “${query}”`;
+      resultCount.textContent = `${offers.length} offerte`;
+      resultsHeader.classList.remove("hidden");
+      resultsHeader.classList.add("flex");
+
+      if (!offers.length) {
+        resultsGrid.innerHTML = `<div class="sm:col-span-2 lg:col-span-3 rounded-3xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">Nessuna offerta trovata per questa ricerca.</div>`;
+      } else {
+        resultsGrid.innerHTML = offers.map(offerCard).join("");
+      }
+      resultsGrid.classList.remove("hidden");
+      status.textContent = data.product?.title ? `Prodotto riconosciuto: ${data.product.title}` : "";
+    } catch (error) {
+      errorState.classList.remove("hidden");
+      errorMessage.textContent = error.message || "Errore inatteso.";
+      status.textContent = "";
+    } finally {
+      setLoading(false);
+    }
+  });
+</script>
+</body>
+</html>
